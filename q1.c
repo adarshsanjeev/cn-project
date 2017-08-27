@@ -6,7 +6,7 @@
 #define SV_HOST "127.0.0.1"
 #define SV_PORT  0
 #define BC_HOST "127.255.255.255"
-#define BC_PORT 9097
+#define BC_PORT 9999
 
 int main() {
 	int server_fd, so_broadcast = 1;
