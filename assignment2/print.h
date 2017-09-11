@@ -2,14 +2,31 @@
 #include<stdlib.h>    //malloc
 #include<string.h>    //memset
 
+/* default snap length (maximum bytes per packet to capture) */
+#define SNAP_LEN 1518
+
+/* ethernet headers are always exactly 14 bytes [1] */
+#define SIZE_ETHERNET 14
+
+/* Ethernet addresses are 6 bytes */
+#define ETHER_ADDR_LEN	6
+
 #define MACHINE_A_IP "10.1.34.125"
-#define MACHINE_B_IP "10.4.20.222"
+#define MACHINE_B_IP "10.2.40.185"
 #define MACHINE_C_IP "127.0.0.1"
 
 #define MACHINE_A_MAC {0xfc, 0x15, 0xb4, 0xfd, 0x21, 0x96}
 #define MACHINE_B_MAC {0x00, 0xe0, 0x4c, 0x42, 0xfe, 0xd3}
 #define MACHINE_C_MAC "127.0.0.1"
 
+/* Ethernet header */
+struct sniff_ethernet {
+    u_char  ether_dhost[ETHER_ADDR_LEN];    /* destination host address */
+    u_char  ether_shost[ETHER_ADDR_LEN];    /* source host address */
+    u_short ether_type;                     /* IP? ARP? RARP? etc */
+};
+
+/* Compute checksum for count bytes starting at addr, using one's complement of one's complement sum*/
 static unsigned short compute_checksum(unsigned short *addr, unsigned int count) {
 	register unsigned long sum = 0;
 
