@@ -22,6 +22,11 @@
 /* Ethernet addresses are 6 bytes */
 #define ETHER_ADDR_LEN	6
 
+u_char A_MAC[6] = MACHINE_A_MAC;
+u_char B_MAC[6] = MACHINE_B_MAC;
+u_char C_MAC[6] = MACHINE_C_MAC;
+
+
 /* Ethernet header */
 struct sniff_ethernet {
     u_char  ether_dhost[ETHER_ADDR_LEN];    /* destination host address */
@@ -30,18 +35,12 @@ struct sniff_ethernet {
 };
 
 
-char* destination_ip_address = NULL;
-
-/*
- * dissect/print packet
- */
-
 pcap_t *handle;				/* packet capture handle */
 /* Compute checksum for count bytes starting at addr, using one's complement of one's complement sum*/
 
 void got_packet(u_char *args, const struct pcap_pkthdr *header, const u_char *packet)
 {
-
+    int i;
     static int count = 1;                   /* packet counter */
     /* declare pointers to packet headers */
     struct sniff_ethernet *ethernet;  /* The ethernet header [1] */
@@ -62,71 +61,80 @@ void got_packet(u_char *args, const struct pcap_pkthdr *header, const u_char *pa
 
     /* print source and destination IP addresses */
     printf("       From: %s\n", inet_ntoa(*(struct in_addr*)&ip->saddr));
+    // A
     printf("         To: %s\n", inet_ntoa(*(struct in_addr*)&ip->daddr));
+    // B
 
     /* determine protocol */	
+    // if saddr === A_IP 
+    // if saddr === C_IP
     if (ip->protocol == IPPROTO_ICMP) {
-		printf("   Protocol: ICMP\n");
-		printf("Sending packet\n");
+	printf("   Protocol: ICMP\n");
+	printf("Sending packet\n");
 
-		if ( inet_aton( destination_ip_address, (struct in_addr *)&ip->daddr) != 1)
-		{
-			printf("IP conversion failes.\n");
-			exit(-1);
-		}
+	if(!strcmp(inet_ntoa(*(struct in_addr*)&ip->saddr), MACHINE_A_IP)){
+	    if ( inet_aton( MACHINE_C_IP, (struct in_addr *)&ip->daddr) != 1)
+	    {
+		printf("IP conversion failes.\n");
+		exit(-1);
+	    }
+	    for (i=0; i<6; i++) {
+		ethernet->ether_dhost[i] = C_MAC[i];
+	    }
+	}
+	else if(!strcmp(inet_ntoa(*(struct in_addr*)&ip->saddr), MACHINE_C_IP)){
+	    // if a, then set as c
+	    if ( inet_aton( MACHINE_A_IP, (struct in_addr *)&ip->daddr) != 1){
+		printf("IP conversion failes.\n");
+		exit(-1);
+	    }
+	    for (i=0; i<6; i++) {
+		ethernet->ether_dhost[i] = A_MAC[i];
+	    }
+	}
+	// always b
+	if ( inet_aton( MACHINE_B_IP, (struct in_addr *)&ip->saddr) != 1)
+	{
+	    printf("IP conversion failes.\n");
+	    exit(-1);
+	}
+	for (i=0; i<6; i++) {
+	    ethernet->ether_shost[i] = B_MAC[i];
+	}
 
-		if ( inet_aton( "10.1.34.125", (struct in_addr *)&ip->saddr) != 1)
-		{
-			printf("IP conversion failes.\n");
-			exit(-1);
-		}
+	// if ends here
+	printf("         New dest ip : %s\n", inet_ntoa(*(struct in_addr*)&ip->daddr));
+	printf("         New source ip : %s\n", inet_ntoa(*(struct in_addr*)&ip->saddr));
 
-		ethernet->ether_dhost[0] = 0xfc;
-		ethernet->ether_dhost[1] = 0x15;
-		ethernet->ether_dhost[2] = 0xb4;
-		ethernet->ether_dhost[3] = 0xfd;
-		ethernet->ether_dhost[4] = 0x21;
-		ethernet->ether_dhost[5] = 0x96;
+	//size_t packet_size = sizeof(packet) + ETHER_ADDR_LEN;
+	size_t packet_size = ntohs(ip->tot_len) - 28;
+	char *packet_data = (u_char *)(packet + SIZE_ETHERNET + size_ip);
+	printf("header len = %d packet size = %lu\n", header->len, packet_size);
 
-		ethernet->ether_shost[0] = 0x00;
-		ethernet->ether_shost[1] = 0xe0;
-		ethernet->ether_shost[2] = 0x4c;
-		ethernet->ether_shost[3] = 0x42;
-		ethernet->ether_shost[4] = 0xfe;
-		ethernet->ether_shost[5] = 0xd3;
+	//printf("size of = %d\n", sizeof(packet[0]));
+	//fflush(stdout);
+	//printf("packet data = %s\n", packet_data);
+	for (i=0; i<packet_size; i++)
+	{
+	    if(isprint(packet[i]))                /* Check if the packet data is printable */
+		printf("%c ",packet[i]);          /* Print it */
+	    else
+		printf(" . ");          /* If not print a . */
+	    if((i%16==0 && i!=0) || i==header->len-1)
+		printf("\n");
+	}
 
-		printf("         New dest ip : %s\n", inet_ntoa(*(struct in_addr*)&ip->daddr));
-		printf("         New source ip : %s\n", inet_ntoa(*(struct in_addr*)&ip->saddr));
+	printf("old chwcksmu = %d\n", ip->check);
+	ip->check = 0;
+	ip->check = compute_checksum((unsigned short*)ip, 4 * ip->ihl);
+	printf("new chwcksmu = %d\n", ip->check);
+	fflush(stdout);
 
-		//size_t packet_size = sizeof(packet) + ETHER_ADDR_LEN;
-		size_t packet_size = ntohs(ip->tot_len) - 28;
-		char *packet_data = (u_char *)(packet + SIZE_ETHERNET + size_ip);
-		printf("header len = %d packet size = %lu\n", header->len, packet_size);
+	int pcap_status = pcap_sendpacket(handle, packet, 50+packet_size);
+	if (pcap_status != 0)
+	    printf("%d Sendpacket failed\n", pcap_status);
 
-		//printf("size of = %d\n", sizeof(packet[0]));
-		//fflush(stdout);
-		//printf("packet data = %s\n", packet_data);
-		for (int i=0; i<packet_size; i++)
-		{
-			if(isprint(packet[i]))                /* Check if the packet data is printable */
-				printf("%c ",packet[i]);          /* Print it */
-			else
-				printf(" . ");          /* If not print a . */
-			if((i%16==0 && i!=0) || i==header->len-1)
-				printf("\n");
-		}
-
-		printf("old chwcksmu = %d\n", ip->check);
-		ip->check = 0;
-		ip->check = compute_checksum((unsigned short*)ip, 4 * ip->ihl);
-		printf("new chwcksmu = %d\n", ip->check);
-		fflush(stdout);
-
-		int pcap_status = pcap_sendpacket(handle, packet, 50+packet_size);
-		if (pcap_status != 0)
-			printf("%d Sendpacket failed\n", pcap_status);
-
-		return;
+	return;
     }
 
     return;
@@ -144,19 +152,18 @@ int main(int argc, char **argv)
     int num_packets = 10000000;			/* number of packets to capture */
 
     /* check for capture device name on command-line */
-    if (argc == 3) {
-        dev = argv[1];
-        destination_ip_address = argv[2];
+    if (argc == 2) {
+	dev = argv[1];
     }
     else
-		exit(EXIT_FAILURE);
+	exit(EXIT_FAILURE);
 
     /* get network number and mask associated with capture device */
     if (pcap_lookupnet(dev, &net, &mask, errbuf) == -1) {
-        fprintf(stderr, "Couldn't get netmask for device %s: %s\n",
-                dev, errbuf);
-        net = 0;
-        mask = 0;
+	fprintf(stderr, "Couldn't get netmask for device %s: %s\n",
+		dev, errbuf);
+	net = 0;
+	mask = 0;
     }
 
     /* print capture info */
@@ -166,30 +173,30 @@ int main(int argc, char **argv)
     handle = pcap_open_live(dev, SNAP_LEN, 1, 1000, errbuf);
 
     if (handle == NULL) {
-        fprintf(stderr, "Couldn't open device %s: %s\n", dev, errbuf);
-        exit(EXIT_FAILURE);
+	fprintf(stderr, "Couldn't open device %s: %s\n", dev, errbuf);
+	exit(EXIT_FAILURE);
     }
 
     pcap_setdirection(handle, PCAP_D_IN);
 
     /* make sure we're capturing on an Ethernet device [2] */
     if (pcap_datalink(handle) != DLT_EN10MB) {
-        fprintf(stderr, "%s is not an Ethernet\n", dev);
-        exit(EXIT_FAILURE);
+	fprintf(stderr, "%s is not an Ethernet\n", dev);
+	exit(EXIT_FAILURE);
     }
 
     /* compile the filter expression */
     if (pcap_compile(handle, &fp, filter_exp, 0, net) == -1) {
-        fprintf(stderr, "Couldn't parse filter %s: %s\n",
-                filter_exp, pcap_geterr(handle));
-        exit(EXIT_FAILURE);
+	fprintf(stderr, "Couldn't parse filter %s: %s\n",
+		filter_exp, pcap_geterr(handle));
+	exit(EXIT_FAILURE);
     }
 
     /* apply the compiled filter */
     if (pcap_setfilter(handle, &fp) == -1) {
-        fprintf(stderr, "Couldn't install filter %s: %s\n",
-                filter_exp, pcap_geterr(handle));
-        exit(EXIT_FAILURE);
+	fprintf(stderr, "Couldn't install filter %s: %s\n",
+		filter_exp, pcap_geterr(handle));
+	exit(EXIT_FAILURE);
     }
 
     /* now we can set our callback function */
