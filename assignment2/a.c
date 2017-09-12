@@ -22,10 +22,10 @@ void got_packet(u_char *args, const struct pcap_pkthdr *header, const u_char *pa
     struct iphdr *ip = (struct iphdr*)(packet + SIZE_ETHERNET);
     struct sniff_ethernet *ethernet = (struct sniff_ethernet*)(packet);
 
-    printf("Sending packet from A(%s)\n", inet_ntoa(*(struct in_addr*)&ip->saddr));
 
     if (ip->protocol == IPPROTO_ICMP) {
 
+		printf("Sending packet from A(%s)\n", inet_ntoa(*(struct in_addr*)&ip->saddr));
 		if (inet_aton( MACHINE_B_IP, (struct in_addr *)&ip->daddr) != 1)
 		{
 			printf("IP conversion fails.\n");
