@@ -1,6 +1,15 @@
-#include<stdio.h>
-#include<stdlib.h>
-#include<string.h>
+#include <pcap.h>
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <ctype.h>
+#include <errno.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <linux/icmp.h>
+#include <linux/ip.h>
 
 #define SNAP_LEN 1518
 #define SIZE_ETHERNET 14
@@ -20,21 +29,13 @@ struct sniff_ethernet {
     u_short ether_type;
 };
 
-static unsigned short compute_checksum(unsigned short *addr, unsigned int count) {
-	register unsigned long sum = 0;
-	while (count > 1) {
-		sum += * addr++;
-		count -= 2;
-	}
+static unsigned short compute_checksum(unsigned short *addr, unsigned int c) {
+	register unsigned long tot = 0;
+	while(c>1){tot += * addr;addr+=1;c-=2;}
 	//if any bytes left, pad the bytes and add
-	if(count > 0) {
-		sum += ((*addr)&htons(0xFF00));
-	}
-	//Fold sum to 16 bits: add carrier to result
-	while (sum>>16) {
-		sum = (sum & 0xffff) + (sum >> 16);
-	}
-	//one's complement
-	sum = ~sum;
-	return ((unsigned short)sum);
+	if(c>0){tot += ((*addr)&htons(0xFF00));}
+	//Fold total sum to 16 bits: add carrier to result
+	while(tot>>16){tot = (tot & 0xffff) + (tot >> 16);}
+	tot = ~tot;
+	return ((unsigned short)tot);
 }
