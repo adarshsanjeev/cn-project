@@ -8,7 +8,7 @@
 
 int main(){
 	int clientSocket, nBytes;
-	char buffer[1024] = "1Helloworld\n";
+	char buffer[1024] = "1Helloworld";
 	struct sockaddr_in serverAddr;
 	socklen_t addr_size;
 
@@ -23,7 +23,7 @@ int main(){
 	addr_size = sizeof serverAddr;
 
 	while(1){
-		printf("You typed: %s",buffer);
+		printf("You typed: %s\n",buffer);
 
 		nBytes = strlen(buffer) + 1;
 
