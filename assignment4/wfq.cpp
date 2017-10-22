@@ -38,8 +38,8 @@ void send_packet(string buff){
 void check_active(){
     N = 0;
     for(int i=0;i<3;i++){
-	if(fn[i] < rt)
-	    N++;
+		if(fn[i] < rt)
+			N++;
     }
 }
 
@@ -52,24 +52,26 @@ void update_rt(){
 
 void *parser(void *pp){
     while(1){
-	if(!pq.size())
-	    continue;
-	else{
-	    //LOCK
 	    door.lock();
-	    pair<int, string> packet = pq.top();
-	    pq.pop();
-	    door.unlock();
-	    usleep(packet.second.size()*1000);
-	    door.lock();
-	    update_rt();
-	    check_active();
-	    // send
-	    send_packet(packet.second);
-	    t0 = time(0);
-	    door.unlock();
-	    //UNLOCK
-	}
+		if(!pq.size()) {
+			door.unlock();
+			continue;
+		}
+		else {
+			//LOCK
+			pair<int, string> packet = pq.top();
+			pq.pop();
+			door.unlock();
+			usleep(packet.second.size()*1000);
+			door.lock();
+			update_rt();
+			check_active();
+			// send
+			send_packet(packet.second);
+			t0 = time(0);
+			door.unlock();
+			//UNLOCK
+		}
     }
 }
 
@@ -98,23 +100,23 @@ int main(){
     pthread_t sender;
     pthread_create(&sender ,NULL, parser, NULL);
     while(1){
-	/* Try to receive any incoming UDP datagram. Address and port of
-	   requesting client will be stored on serverStorage variable */
-	recvfrom(udpSocket,buffer,1024,0,(struct sockaddr *)&serverStorage, &addr_size);
-	// INTERRUPT TO
-	// LOCK 
-	door.lock();
-	//Insert packet into queue with FN and RN
-	int temp = (int)(buffer[0] - '0');
-	string str(buffer);
-	t0 = time(0);
-	fn[temp] = max(fn[temp], rt) + strlen(buffer);
-	pq.push(make_pair(fn[temp], str));
-	update_rt();
-	check_active();
-	door.unlock();
+		/* Try to receive any incoming UDP datagram. Address and port of
+		   requesting client will be stored on serverStorage variable */
+		recvfrom(udpSocket,buffer,1024,0,(struct sockaddr *)&serverStorage, &addr_size);
+		// INTERRUPT TO
+		// LOCK
+		door.lock();
+		//Insert packet into queue with FN and RN
+		int temp = (int)(buffer[0] - '1');
+		string str(buffer);
+		t0 = time(0);
+		fn[temp] = max(fn[temp], rt) + strlen(buffer);
+		pq.push(make_pair(fn[temp], str));
+		update_rt();
+		check_active();
+		door.unlock();
 
-	//printf("rec: %s\n", buffer);
+		//printf("rec: %s\n", buffer);
     }
 
     return 0;

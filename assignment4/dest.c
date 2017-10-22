@@ -31,13 +31,8 @@ int main(){
 	while(1){
 		/* Try to receive any incoming UDP datagram. Address and port of
 		   requesting client will be stored on serverStorage variable */
-        recvfrom(udpSocket,buffer,1024,0,(struct sockaddr *)&serverStorage, &addr_size);
-		if (buffer[0] == '1')
-			printf("Received from 1\n");
-		else if (buffer[1] == '2')
-			printf("Received from 2\n");
-		else
-			printf("Received from 3\n");
+        unsigned long nel = recvfrom(udpSocket,buffer,1024,0,(struct sockaddr *)&serverStorage, &addr_size);
+		printf("Received from %d of length %lu\n", buffer[0]-'0', nel);
 	}
 
 	return 0;
