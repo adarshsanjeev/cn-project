@@ -17,6 +17,7 @@ using namespace std;
 priority_queue< pair <int, string> > pq;
 float rt = 0, fn[] = {0,0,0}, old_rt;
 int N = 0, count[] = {0,0,0}, t=0;
+int[] weights = {2, 4, 1};
 time_t start, t0;
 mutex door;
 void send_packet(string buff){
@@ -39,7 +40,7 @@ void check_active(){
     N = 0;
     for(int i=0;i<3;i++){
 		if(fn[i] < rt)
-			N++;
+			N+=weight[i];
     }
 }
 
@@ -110,7 +111,7 @@ int main(){
 		int temp = (int)(buffer[0] - '1');
 		string str(buffer);
 		t0 = time(0);
-		fn[temp] = max(fn[temp], rt) + strlen(buffer);
+		fn[temp] = max(fn[temp], rt) + strlen(buffer)*7/weight[temp];
 		pq.push(make_pair(fn[temp], str));
 		update_rt();
 		check_active();
