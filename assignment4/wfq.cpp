@@ -124,14 +124,12 @@ int main(){
     pthread_t sender;
     pthread_create(&sender ,NULL, parser, NULL);
     while(1){
-	/* Try to receive any incoming UDP datagram. Address and port of
-	   requesting client will be stored on serverStorage variable */
 	recvfrom(udpSocket,buffer,1024,0,(struct sockaddr *)&serverStorage, &addr_size);
-	// INTERRUPT TO
 	// LOCK
 	door.lock();
 	//Insert packet into queue with FN and RN
 	int temp = (int)(buffer[0] - '1');
+	cout << "Received from source " << temp << endl;
 	string str(buffer);
 	t0 = time(0);
 	fn[temp] = max(fn[temp], rt) + strlen(buffer)*7/weight[temp];

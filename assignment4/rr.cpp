@@ -80,6 +80,7 @@ int main(){
     while(1){
 	recvfrom(udpSocket,buffer,1024,0,(struct sockaddr *)&serverStorage, &addr_size);
 	int temp = (int)(buffer[0] - '1');
+	cout << " Received from source " << temp << endl;
 	string str(buffer);
 	// LOCK
 	door.lock();
