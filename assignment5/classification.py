@@ -102,15 +102,19 @@ def classify(t1, t2):
 
 for index, line in enumerate(open("rules.txt")):
     t1, l1, t2, l2 = line.split(" ")
-    bin_t1 =  "".join([ str(bin(int(i)))[2:] for i in t1.split(".") ])
-    bin_t2 =  "".join([ str(bin(int(i)))[2:] for i in t2.split(".") ])
+    l1 = int(l1)
+    l2 = int(l2)
+    bin_t1 =  "".join([ "%08d" % int(str(bin(int(i)))[2:]) for i in t1.split(".") ])
+    bin_t2 =  "".join([ "%08d" % int(str(bin(int(i)))[2:]) for i in t2.split(".") ])
     addRule(index+1, bin_t1, bin_t2)
+    bin_t1 = bin_t1[:l1]
+    bin_t2 = bin_t2[:l2]
     print bin_t1, bin_t2
 
 with open("output.txt", 'w') as O:
     for index, line in enumerate(open("input")):
         t1, t2 = line.strip().split(" ")
-        bin_t1 =  "".join([ str(bin(int(i)))[2:] for i in t1.split(".") ])
-        bin_t2 =  "".join([ str(bin(int(i)))[2:] for i in t2.split(".") ])
+        bin_t1 =  "".join([ "%08d" % int(str(bin(int(i)))[2:]) for i in t1.split(".") ])
+        bin_t2 =  "".join([ "%08d" % int(str(bin(int(i)))[2:]) for i in t2.split(".") ])
         possible_rules = classify(bin_t1, bin_t2)
         O.write('%s %s %d %d\n' % (t1, t2, len(possible_rules), min(possible_rules+[Rule(-1)]).number))
