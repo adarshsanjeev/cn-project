@@ -96,7 +96,9 @@ def classify(t1, t2):
             if node.right is None:
                 break
             node = node.right
-    return possible_rules
+    if node.next_trie is not None:
+        possible_rules.append(node.next_trie)
+    return list(set(possible_rules))
 
 
 
