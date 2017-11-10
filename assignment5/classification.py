@@ -106,10 +106,9 @@ for index, line in enumerate(open("rules.txt")):
     l2 = int(l2)
     bin_t1 =  "".join([ "%08d" % int(str(bin(int(i)))[2:]) for i in t1.split(".") ])
     bin_t2 =  "".join([ "%08d" % int(str(bin(int(i)))[2:]) for i in t2.split(".") ])
-    addRule(index+1, bin_t1, bin_t2)
     bin_t1 = bin_t1[:l1]
     bin_t2 = bin_t2[:l2]
-    print bin_t1, bin_t2
+    addRule(index+1, bin_t1, bin_t2)
 
 with open("output.txt", 'w') as O:
     for index, line in enumerate(open("input")):
