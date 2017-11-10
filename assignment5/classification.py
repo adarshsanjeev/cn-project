@@ -1,3 +1,5 @@
+from copy import deepcopy as dc
+
 class Node:
     left = None
     right = None
@@ -15,6 +17,27 @@ class Rule:
     def __str__(self):
         return "Rule number:%d" % self.number
 
+def dfs(A,B):
+    if A.left == None and B.left:
+        A.left = B.left
+    if A.right == None and B.right:
+        A.right = B.right
+    if A.left and B.left:
+        dfs(A.left, B.left)
+    if A.right and B.right:
+        dfs(A.right, B.right)
+
+
+def mergeTries(A, B):
+    if A == None and B != None:
+        return B
+    elif A != None and B == None:
+        return A
+    elif A == None and B == None:
+        return None
+    dfs(A,B)
+
+
 def addRule(rule, t1, t2):
     node = root
     new_next_trie = root.next_trie
@@ -27,7 +50,7 @@ def addRule(rule, t1, t2):
             if node.right is None:
                 node.right = Node()
             node = root.right
-        # new_next_trie = mergeTries(new_next_trie, node.next_trie)
+        new_next_trie = mergeTries(new_next_trie, node.next_trie)
     # node.next_trie = new_next_trie
     if node.next_trie is None:
        node.next_trie = Node() 
