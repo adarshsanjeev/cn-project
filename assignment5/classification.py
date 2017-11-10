@@ -1,4 +1,5 @@
 from copy import deepcopy as dc
+import datetime
 
 class Node:
     left = None
@@ -123,8 +124,10 @@ with open("output.txt", 'w') as O:
         t1, t2 = line.strip().split(" ")
         bin_t1 =  "".join([ "%08d" % int(str(bin(int(i)))[2:]) for i in t1.split(".") ])
         bin_t2 =  "".join([ "%08d" % int(str(bin(int(i)))[2:]) for i in t2.split(".") ])
+        m1 = float(datetime.datetime.now().microsecond)
         possible_rules = classify(bin_t1, bin_t2)
+        m2 = float(datetime.datetime.now().microsecond)
         if possible_rules == []:
-            O.write('%s %s %d %d\n' % (t1, t2, len(possible_rules), -1))
+            O.write('%s %s %d %d %.1f\n' % (t1, t2, len(possible_rules), -1,m2-m1))
         else:
-            O.write('%s %s %d %d\n' % (t1, t2, len(possible_rules), min(possible_rules).number))
+            O.write('%s %s %d %d %.1f\n' % (t1, t2, len(possible_rules), min(possible_rules).number,m2-m1))
